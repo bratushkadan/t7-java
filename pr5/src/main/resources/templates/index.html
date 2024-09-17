@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Uploader (Decentralized)</title>
+    <link
+        rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    >
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Uploaded files:</h1>
+        <form
+            id="uploadForm"
+            action="/upload"
+            method="post"
+            enctype="multipart/form-data"
+            class="form-inline"
+        >
+            <div class="form-group">
+                <input type="file" class="form-control-file" name="file" onchange="updateFilename()">
+            </div>
+            <div class="form-group">
+                <input
+                    type="text"
+                    class="form-control"
+                    name="filename"
+                    placeholder="File name (without an extension)"
+                >
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">File name</th>
+                <th scope="col">Download link</th>
+                <th scope="col">File size in bytes</th>
+                <th scope="col">Delete file</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="file : ${files}">
+                <td th:text="${file.getFileName()}"></td>
+                <td><a th:href="@{'/download/' + ${file.id}}">*Click*</a></td>
+                <td th:text="${file.getFileSize()}"></td>
+                <td><a th:href="@{'/delete/' + ${file.id}}">*Click*</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <script type="text/plain" src="https://cdn.jsdelivr.net/npm/@popperjs/core@1.16.0/dist/umd/popper.min.js">
+    </script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        function updateFilename() {
+            const fileInput = document.querySelector('input[name="file"]');
+            const filenameInput = document.querySelector('input[name="filename"]');
+            const fullPath = fileInput.value;
+
+            if (fullPath) {
+                var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
+                var filename = fullPath.substring(startIndex).replace(/[\\\/]/, '');
+                filenameInput.value = filename;
+            }
+        }
+
+        $(document).ready(function() {
+            $('#uploadForm').on('submit', function(event) {
+                event.preventDefault();
+
+                const formData = new FormData();
+
+                const fileInput = document.querySelector('input[name="file"]');
+                const filenameInput = document.querySelector('input[name="filename"]');
+
+                formData.append('file', fileInput.files[0]);
+                formData.append('filename', filenameInput.value);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.status === 200) {
+                        window.location.reload()
+                    }
+                })
+                .catch(error => {
+                    alert("An error occurred.");
+                    console.error('Error:', error);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
